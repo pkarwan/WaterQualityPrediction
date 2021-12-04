@@ -11,13 +11,15 @@ library(DT)
 library(plotly)
 
 #Load data
-waterPotabilityFullData<- read.csv("./data/water_potability.csv")
+waterPotabilityFullData<- as_data_frame(read.csv("./data/water_potability.csv"))
+waterPotabilityFullData <- waterPotabilityFullData %>% na.omit(waterPotabilityFullData)
+name<- names(waterPotabilityFullData)
 
 
 # Define UI for application that draws a histogram
 shinyUI(
   dashboardPage(
-    dashboardHeader(title = "Water Quality"),
+    dashboardHeader(title = "Water Quality Prediction"),
     dashboardSidebar(
       sidebarMenu(
         menuItem("About", tabName = "about", icon = icon("clipboard")),
@@ -54,8 +56,8 @@ shinyUI(
                 h2("About"),
                 img(src = "https://images.squarespace-cdn.com/content/v1/583ca2f2d482e9bbbef7dad9/1485814003621-5AKV9QXZDBZTH4S1CE6L/iStock-1538821421900.jpg", width = "70%"),
                 h3("Purpose of the App"),
-                h4("Our goal is to predict the water quality. To achieve this goad, we will be to fit the model and measure the statistics, how accurately can it be predicted the water quality. We will be using  the Random Forest model, Classical Regression Tree and
-                         Multiple Linear model to fit the model and predict the water quality. Then choose the best one."),
+                h4("Our goal is to predict the water quality. To achieve this goal, we will be to fit the models and measure the statistics, how accurately can it be predicted the water quality. We will be using  the Random Forest model, logistic Regression model and
+                         Linear Regression model and choose the best one to predict the water quality."),
                 br(),
                 br(),   
                 
@@ -85,7 +87,7 @@ shinyUI(
                 
                 
                 h2("Data Set Information"),
-                h4("This data set is donloaded from ", 
+                h4("This data set is downloaded from ", 
                    a(href= "https://www.kaggle.com/adityakadiwal/water-potability", "kaggle"),
                    "Access to safe drinking-water is essential to health, a basic human right and a component of effective policy for health protection. This is important as a health and development issue at a national, regional and local level. In some regions, it has been shown that investments in water supply and sanitation can yield a net economic benefit, since the reductions in adverse health effects and health care costs outweigh the costs of undertaking the interventions.
 						   This dataset describes if water is safe to consume as a drinking water based on water-potability."),
