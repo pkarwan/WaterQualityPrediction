@@ -121,12 +121,13 @@ shinyServer(function(input, output, session) {
     }
     
     ggplotly(ggplot(waterPotabilityFullData, aes(water_type, ph)) +
-               geom_boxplot(aes('potabiliy')) +
+               geom_point(size = 5) +
+               geom_line(colour = "red") +
                ggtitle("water_type vs ph "))
     
-    s <- ggplot(waterPotabilityFullData, aes(ph, fill = 'potibility'))
-    s + geom_bar(position = "dodge")
-    s + geom_bar(position = "fill")
+    # s <- ggplot(waterPotabilityFullData, aes(ph, fill = 'potibility'))
+    # s + geom_bar(position = "dodge")
+    # s + geom_bar(position = "fill")
     
   })
   
