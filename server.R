@@ -120,10 +120,11 @@ shinyServer(function(input, output, session) {
       histplotHelper()
     }
     
-    ggplotly(ggplot(waterPotabilityFullData, aes(water_type, ph)) +
+    ggplot(waterPotabilityFullData, aes(water_type, ph, 
+                                        colour = `Hard_level`)) +
                geom_point(size = 5) +
                geom_line(colour = "red") +
-               ggtitle("water_type vs ph "))
+               ggtitle(paste0("water_type vs ",input$vName))
     
     # s <- ggplot(waterPotabilityFullData, aes(ph, fill = 'potibility'))
     # s + geom_bar(position = "dodge")

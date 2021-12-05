@@ -73,7 +73,7 @@ shinyUI(
                           br(), br(),
                           
                 ),
-                tags$div(selectInput("vName", "Variables:", selected = "ph",
+                tags$div(selectInput("vName", "Variables:", selected = "Conductivity",
                                      choices = colnames(waterPotabilityFullData)),
                          br(),
                 ),
