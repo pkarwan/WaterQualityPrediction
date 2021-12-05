@@ -9,12 +9,44 @@ library(stringr)
 library(caret)
 library(DT)
 library(plotly)
+library(shinycssloaders)
 
 #Load data
-waterPotabilityFullData<- as_data_frame(read.csv("./data/water_potability.csv"))
+waterPotabilityFullData<- as_tibble(read.csv("./data/water_potability.csv"))
 waterPotabilityFullData <- waterPotabilityFullData %>% na.omit(waterPotabilityFullData)
+
+#str(waterPotabilityFullData)
+
+water_type<- waterPotabilityFullData['ph']
+water_type <- round(water_type, digits = 1)
+waterPotabilityFullData <- waterPotabilityFullData %>% 
+  mutate(water_type = case_when(
+    (water_type>8) ~ "Alkaline",
+    (water_type<=8 & water_type>7.5) ~ "Seawater",
+    (water_type==7.5) ~ "Tap",
+    (water_type< 7.5 & water_type>=6.5) ~ "Bottled",
+    (water_type<6.5 & water_type>=5.5) ~ "Distilled",
+    (water_type<5.5 ~ "Acidic")
+  ))
+
+#str(waterPotabilityFullData)
+
+Hard_level <- waterPotabilityFullData['Hardness']
+Hard_level <- round(Hard_level, digits = 1)
+waterPotabilityFullData <- waterPotabilityFullData %>% 
+  mutate(Hard_level = case_when(
+    (Hard_level>=0 & Hard_level<17.1) ~ "Soft",
+    (Hard_level>=17.1 & Hard_level<120) ~ "Medium hard",
+    (Hard_level>=120 & Hard_level<180) ~ "Hard",
+    (Hard_level>180) ~ "Very Hard"
+  ))
+
+#str(waterPotabilityFullData)
+
 name<- names(waterPotabilityFullData)
 
+waterPotabilityFullData <-  waterPotabilityFullData %>% select(everything()) %>%mutate(across(c("Potability","water_type","Hard_level"), factor))
+str(waterPotabilityFullData)
 
 # Define UI for application that draws a histogram
 shinyUI(
@@ -33,8 +65,29 @@ shinyUI(
       tabItems(
         tabItem(tabName = "dataexp",
                 fluidRow( h2("3. Data Exploration"),br(), br(),
+                          h4("  As we will be focusing on the the prediction of water quality, the data exploration
+                                      will concentrate on potability column from the data table. The data table for the highest user ratings 
+                                      shown for the demonstration purpose only, which can be dowloaded from the 
+                                      `Data` tab. Therefore download option is not provided here. 
+                                      "),
+                          br(), br(),
                           
-                )),
+                ),
+                tags$div(selectInput("vName", "Variables:", selected = "ph",
+                                     choices = colnames(waterPotabilityFullData)),
+                         br(),
+                ),
+      
+                tags$div(
+                  h4("Summary"),
+                  verbatimTextOutput("summary"),
+                  br(),
+                  tags$div( withSpinner(plotOutput("histPlot"),  type = getOption("spinner.type", default = 6),
+                                        color = getOption("spinner.color", default = "#FFA500")), 
+                            downloadButton(outputId = "histPlotDownload", label = "Download Plot")),
+                  
+                )
+                ),
         
         #Modeling Page
         
@@ -46,8 +99,23 @@ shinyUI(
         
         tabItem(tabName = "data",
                 fluidRow( h2("2. Dataset"), br(), br(),
+                          h4("The intention of this page is to allow the user navigate throught the whole
+                                    data set and play around to choose the attributes as per the requirement of
+                                    user. Here you can also subset the data set and downoload as '.csv' file."), br(),
                           
-                )),
+                ),
+                tags$div( 
+                  br(),
+                  h4("Select options below to subset the data"),
+                  br(),
+                  varSelectInput("dtsetvar", "Select variables to subset", waterPotabilityFullData, multiple = T)
+                ),
+                br(),
+                br(),
+                tags$div(downloadButton("downloadData", "Download"),br(),
+                         dataTableOutput("dtset") 
+                         ),br(),
+                ),
         
         
         
