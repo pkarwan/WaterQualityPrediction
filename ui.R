@@ -14,8 +14,8 @@ library(shinycssloaders)
 #Load data
 waterPotabilityFullData<- as_tibble(read.csv("./data/water_potability.csv"))
 waterPotabilityFullData <- waterPotabilityFullData %>% na.omit(waterPotabilityFullData)
-
-#str(waterPotabilityFullData)
+#waterPotabilityFullData <- scale(waterPotabilityFullData)
+#head(waterPotabilityFullData)
 
 water_type<- waterPotabilityFullData['ph']
 water_type <- round(water_type, digits = 1)
@@ -72,24 +72,62 @@ shinyUI(
                                       "),
                           br(), br(),
                           
-                      #x =  subset(waterPotabilityFullData,select=!c("potability","water_type","Hard_level")) , 
                       box(selectInput("vName", "Select the Variable", 
                                   selected = "ph",
                                   choices = colnames(waterPotabilityFullData))
-                                  #choices = !colnames(waterPotabilityFullData) %in% c("potability","water_type","Hard_level"))
                 ),
                 
-                br(),
-                tags$div(
+                box(
                   h4("Summary"),
                   verbatimTextOutput("summary"),
-                  br(),
-                  tags$div( withSpinner(plotOutput("histPlot"),  type = getOption("spinner.type", default = 6),
+                  br())),
+                
+                fluidRow( tags$div( withSpinner(plotOutput("histPlot", height = 200),  type = getOption("spinner.type", default = 6),
                                         color = getOption("spinner.color", default = "#FFA500")), 
                             downloadButton(outputId = "histPlotDownload", label = "Download Plot")),
                   
+                
+                ) , 
+                br(),br(),
+                
+                fluidRow(
+                # For conditional output
+                tags$div(
+                box(selectInput("varPlot", "Select the Type of plot",
+                                selected = "Scatter Plot",
+                                choices = c("Scatter Plot"="scatter", "Box Plot"="box", "Histogram"="hist")
+                )),
+                # Only show this panel if the plot type is a scatter
+                conditionalPanel("input.varPlot == 'scatter'",
+                                 plotOutput("scatterPlot", height = 200),
+                                 
+                ),
+                # Only show this panel if the plot type is a hist
+                conditionalPanel("input.varPlot == 'hist'",
+                                 plotOutput("hist", height = 200)
+                ),
+                # Only show this panel if the plot type is a box
+                conditionalPanel("input.varPlot == 'box'",
+                                 plotOutput("box", height = 200)
+                ),
+                br(),br(),br(),br(),br(),br(),
+                downloadButton(outputId = "condPlotDownload", label = paste0("Download Plot"))
+                
+                )),
+                
+                # Summary for Categorical Data
+                fluidRow(
+                  h4("Please find below details for the Water type, Hard level and Potability"),
+                  br(),
+                  div(em("Water Type ",": ",  "Alkaline, ", "Acidic, ", "Bottled, ", "Distilled, ","Seawater, ", "Tap ")),
+                  div(em("Hard level" ,": ",  "Hard, ", "Medium Hard, ", "Very Hard, ")),
+                  div(em("Potability" ,": ",  "0 = Not Safe to drink, ", "1 = Safe to drink")),
+                  
+                  box(tableOutput("tbl1")),
+                  box(tableOutput("tbl2"))
                 )
-                )  ),
+                
+                ),
         
         #Modeling Page
         

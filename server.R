@@ -36,7 +36,6 @@ waterPotabilityFullData <- waterPotabilityFullData %>%
     (water_type<5.5 ~ "Acidic")
   ))
 
-#str(waterPotabilityFullData)
 
 Hard_level <- waterPotabilityFullData['Hardness']
 Hard_level <- round(Hard_level, digits = 1)
@@ -48,9 +47,10 @@ waterPotabilityFullData <- waterPotabilityFullData %>%
   ))
 
 name<- names(waterPotabilityFullData)
-#name
+name
 #[1] "ph"              "Hardness"        "Solids"          "Chloramines"     "Sulfate"        
 #[6] "Conductivity"    "Organic_carbon"  "Trihalomethanes" "Turbidity"       "Potability"
+#[11] "water_type"      "Hard_level" 
 
 waterPotabilityFullData <-  waterPotabilityFullData %>% select(everything()) %>%mutate(across(c("Potability","water_type","Hard_level"), factor))
 #waterPotabilityFullData
@@ -93,18 +93,29 @@ shinyServer(function(input, output, session) {
   #*Data Exploration 
   # Output numerical summary
   output$summary <- renderPrint({
-    if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "solids" || 
+    if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "Solids" || 
        input$vName == "Chloramines" || input$vName == "Sulfate" || 
        input$vName == "Conductivity" || input$vName == "Organic_carbon" || 
        input$vName == "Trihalomethanes" || input$vName == "Turbidity") 
       summary(waterPotabilityFullData[,input$vName])
     
     
-    else if(input$vName == "Hard_level" || input$vName == "water_type") 
+    else if(input$vName == "Hard_level" || input$vName == "water_type")
       table(waterPotabilityFullData[,input$vName])
-    
-    else if(input$vName == "Potability")
+
+    else if(input$vName == "Potability") 
       summary(waterPotabilityFullData[,input$vName])
+
+  })
+  
+  
+  # Categorical summaries
+  output$tbl1 <- renderTable({
+    table(waterPotabilityFullData$Hard_level,waterPotabilityFullData$water_type)
+  })
+  
+  output$tbl2 <- renderTable({
+    table(waterPotabilityFullData$Potability,waterPotabilityFullData$water_type)
   })
   
   #Plot Helper function
@@ -117,7 +128,7 @@ shinyServer(function(input, output, session) {
   
   output$histPlot <- renderPlot({
 
-    if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "solids" || 
+    if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "Solids" || 
            input$vName == "Chloramines" || input$vName == "Sulfate" || 
            input$vName == "Conductivity" || input$vName == "Organic_carbon" || 
            input$vName == "Trihalomethanes" || input$vName == "Turbidity") {
@@ -130,13 +141,9 @@ shinyServer(function(input, output, session) {
         geom_line(colour = "red") +
         ggtitle(paste0("water_type vs ph"))
     }
-
-    
-    # s <- ggplot(waterPotabilityFullData, aes(ph, fill = 'potibility'))
-    # s + geom_bar(position = "dodge")
-    # s + geom_bar(position = "fill")
-    
   })
+  
+  
   
   #Download plots
   output$histPlotDownload <- downloadHandler(
@@ -150,6 +157,64 @@ shinyServer(function(input, output, session) {
       
     }
   )
+  
+  # For ConditionalPanel
+  output$scatterPlot <- renderPlot({
+    scatterplotHelper()
+  })
+  
+  #Plot Helper function
+  scatterplotHelper <- function() {
+    ggplot(waterPotabilityFullData, aes(x=`Hardness`, y=`ph`, colour=`Potability`)) +
+      geom_point(size=2, shape=23) +
+      ggtitle(paste0("Hardness vs PH"))
+  }
+
+  output$hist <- renderPlot({
+    plothistHelper()
+  })
+  
+  plothistHelper <- function() {
+    ggplot(waterPotabilityFullData, aes(x=`Organic_carbon`, colour=`Potability`)) +
+      geom_histogram() +
+      ggtitle(paste0("Organic Carbon Graph"))
+  }
+
+  output$box <- renderPlot({
+    boxplotHelper()
+  })
+  
+  boxplotHelper <- function() {
+    ggplot(waterPotabilityFullData, aes(x=`Sulfate`,y=`Chloramines`, colour=`Potability`)) +
+      geom_boxplot() +
+      ggtitle(paste0("Sulfate vs Chloramines"))
+  }
+  
+  #Download plots
+  output$condPlotDownload <- downloadHandler(
+    filename =  function() {
+      paste0(input$varPlot,".png")
+    },
+    content = function(file) {
+      png(file) # open the png device
+      
+      if(input$varPlot == "scatter") {
+        print(scatterplotHelper())
+      }
+      
+      if(input$varPlot == "hist") {
+        print(plothistHelper())
+      }
+      
+      if(input$varPlot == "box") {
+        print(boxplotHelper())
+      }
+
+      dev.off()  # turn the device off
+      
+    }
+  )
+
   
   #Update slider
   #observe({updateSliderInput(session, "bins", max = input$maxBins)})
