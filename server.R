@@ -109,22 +109,28 @@ shinyServer(function(input, output, session) {
   
   #Plot Helper function
   histplotHelper <- function() {
-    ggplot(waterPotabilityFullData, aes(input$vName)) + geom_bar(aes(color = waterPotabilityFullData$potibility)) + ggtitle(input$vName)
+    ggplot(waterPotabilityFullData, aes(x=input$vName,
+                                        fill = `water_type`)) + 
+      stat_count(width = 0.5,geom = "bar", position = "dodge") +
+      ggtitle(input$vName)
   }
   
   output$histPlot <- renderPlot({
+
     if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "solids" || 
            input$vName == "Chloramines" || input$vName == "Sulfate" || 
            input$vName == "Conductivity" || input$vName == "Organic_carbon" || 
            input$vName == "Trihalomethanes" || input$vName == "Turbidity") {
       histplotHelper()
     }
-    
-    ggplot(waterPotabilityFullData, aes(water_type, ph, 
-                                        colour = `Hard_level`)) +
-               geom_point(size = 5) +
-               geom_line(colour = "red") +
-               ggtitle(paste0("water_type vs ",input$vName))
+    else {
+      ggplot(waterPotabilityFullData, aes(water_type, `ph`,
+                                          colour = `Hard_level`)) +
+        geom_point(size = 5) +
+        geom_line(colour = "red") +
+        ggtitle(paste0("water_type vs ph"))
+    }
+
     
     # s <- ggplot(waterPotabilityFullData, aes(ph, fill = 'potibility'))
     # s + geom_bar(position = "dodge")
@@ -144,6 +150,9 @@ shinyServer(function(input, output, session) {
       
     }
   )
+  
+  #Update slider
+  #observe({updateSliderInput(session, "bins", max = input$maxBins)})
   
   #***************************************************************************
   

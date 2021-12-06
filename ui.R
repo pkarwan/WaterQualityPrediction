@@ -72,12 +72,14 @@ shinyUI(
                                       "),
                           br(), br(),
                           
+                      #x =  subset(waterPotabilityFullData,select=!c("potability","water_type","Hard_level")) , 
+                      box(selectInput("vName", "Select the Variable", 
+                                  selected = "ph",
+                                  choices = colnames(waterPotabilityFullData))
+                                  #choices = !colnames(waterPotabilityFullData) %in% c("potability","water_type","Hard_level"))
                 ),
-                tags$div(selectInput("vName", "Variables:", selected = "Conductivity",
-                                     choices = colnames(waterPotabilityFullData)),
-                         br(),
-                ),
-      
+                
+                br(),
                 tags$div(
                   h4("Summary"),
                   verbatimTextOutput("summary"),
@@ -87,7 +89,7 @@ shinyUI(
                             downloadButton(outputId = "histPlotDownload", label = "Download Plot")),
                   
                 )
-                ),
+                )  ),
         
         #Modeling Page
         
