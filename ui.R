@@ -130,10 +130,23 @@ shinyUI(
                 ),
         
         #Modeling Page
-        
         tabItem(tabName = "modeling",
-                fluidRow( h2("4. Modeling"), br(),
-                )),
+                fluidPage(
+                  fluidRow(
+                    tabsetPanel(
+                      tabPanel("Modeling Info",
+                               
+                      ),
+                      tabPanel("Model Fitting",
+                               
+                               ),
+                      tabPanel("Prediction")
+                    )
+                  )
+                )
+                
+          
+        ),
         
         #Dataset page
         

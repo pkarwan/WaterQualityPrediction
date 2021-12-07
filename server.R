@@ -92,6 +92,7 @@ shinyServer(function(input, output, session) {
   #******************************************************#
   #*Data Exploration 
   # Output numerical summary
+
   output$summary <- renderPrint({
     if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "Solids" || 
        input$vName == "Chloramines" || input$vName == "Sulfate" || 
@@ -120,27 +121,24 @@ shinyServer(function(input, output, session) {
   
   #Plot Helper function
   histplotHelper <- function() {
-    ggplot(waterPotabilityFullData, aes(x=input$vName,
-                                        fill = `water_type`)) + 
-      stat_count(width = 0.5,geom = "bar", position = "dodge") +
-      ggtitle(input$vName)
-  }
-  
-  output$histPlot <- renderPlot({
-
     if(input$vName == "ph" || input$vName == "Hardness" || input$vName == "Solids" || 
-           input$vName == "Chloramines" || input$vName == "Sulfate" || 
-           input$vName == "Conductivity" || input$vName == "Organic_carbon" || 
-           input$vName == "Trihalomethanes" || input$vName == "Turbidity") {
-      histplotHelper()
+       input$vName == "Chloramines" || input$vName == "Sulfate" || 
+       input$vName == "Conductivity" || input$vName == "Organic_carbon" || 
+       input$vName == "Trihalomethanes" || input$vName == "Turbidity") {
+    ggplot(waterPotabilityFullData, aes_string(x=input$vName,
+                                        fill = "water_type")) + 
+      geom_histogram(position="dodge") +
+      ggtitle(input$vName)
     }
     else {
-      ggplot(waterPotabilityFullData, aes(water_type, `ph`,
-                                          colour = `Hard_level`)) +
-        geom_point(size = 5) +
-        geom_line(colour = "red") +
-        ggtitle(paste0("water_type vs ph"))
+      ggplot(waterPotabilityFullData, aes_string(x=input$vName, fill=input$vName)) +
+        geom_bar()+
+        ggtitle(input$vName)
     }
+  } 
+ 
+  output$histPlot <- renderPlot({
+    histplotHelper()
   })
   
   
