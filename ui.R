@@ -162,10 +162,9 @@ shinyUI(
                                                  Prediction updated as trees grown. This can be applied by initializing prediction as zero. Then find the residuals.Fit the tree with d splits, treating residuals as response. 
                                                  Then update the predictions and update residuals for new predictions and repeat number of times."),
                                         withMathJax(),
-                                        
                                         tags$div(
                                         h3("Formula to update predictions of Boosted Decision Tree Model"),
-                                        span("y-hat(x) = y-hat (x)+ λy^b(x)"),br(),
+                                        tags$div("$$\\hat{y}(x) = \\hat{y}(x) + λ\\hat{y}^b(x)$$"),
                                         span("λ")," is a shrinkage parameter,",br(),
                                         span("y^b(x)")," Treating the residuals as the response (which they are for the first fit),",br(),
                                         span("y-hat(x)")," predictions"
@@ -207,7 +206,7 @@ shinyUI(
                                    sliderInput("dataSlider", "Select Training Data (in percentage):", 60, 90, 70, step=5),
                                    varSelectInput("trainingPred", "Select Columns", waterPotabilityFullData %>% select(-Potability,-water_type,-Hard_level), multiple = T),
                                    uiOutput("mtryInput"),
-                                   actionButton("mdlRunButton", "Run Models", class = "btn-primary"),
+                                   actionButton("mdlRunButton", "Train Models", class = "btn-primary"),
                                    verbatimTextOutput ("TestSummary")
                                  ),
                                  fluidRow(
