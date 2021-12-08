@@ -135,7 +135,69 @@ shinyUI(
                   fluidRow(
                     tabsetPanel(
                       tabPanel("Modeling Info",
+                               br(),tags$div("We will be using below three models to predict the quality of the water if its safe to consume for humans."),br(),br(),
+                               tags$div(fluidRow(strong("K-Nearest Neighbours Model")),
+                                        tags$div("K Nearest Neighbor algorithm(KNN) is a Supervised Learning algorithm. It is getting used for (mostly) classification and regression problems.
+                                                 KNN suggests it considers **CLOSEST** K Nearest Neighbors (Data points) to predict the class or continuous value for the new Datapoint.
+                                                 It often use Euclidean distance between predictors to determine closest data points and predict the class with highest probability"),
+                                        br(), 
+                                        fluidRow(tags$i("Advantages : ")),
+                                        tags$ul("It can be used for both regression and classification"),
+                                        tags$ul("It is easy to implement"),        
+                                        tags$ul("It simple and effective in nature"),
+                                        tags$ul("The algorithm is highly unbiased in nature and makes no prior assumption of the underlying data."),
+                                        tags$ul("KNN is a Lazy Learner (Instance based learning).There is no training period for it. It stores the training dataset and learns from it only at the time of making real time predictions. 
+                                                This makes the KNN algorithm much faster than other algorithms that require training."),
+                                        br(),       
+                                        fluidRow(tags$i("Drawbacks :")),
+                                        tags$ul("In large datasets, the cost of calculating the distance between the new point and each existing points is huge which degrades the performance of the algorithm."),
+                                        tags$ul("The KNN algorithm doesn't work well with high dimensional data because with large number of dimensions, it becomes difficult for the algorithm to calculate the distance in each dimension."),
+                                        tags$ul("We need to do feature scaling before applying KNN algorithm to any dataset."),
+                                        tags$ul("KNN is sensitive to noise in the dataset. Need to manually impute missing values and remove outliers."),
+                                        ),br(),br(),
                                
+                               # Boosted Model
+                               tags$div(fluidRow(strong("Boosted Decision Tree Model")),
+                                        tags$div("Boosting is one of the ensemble technique to create a collection of predictors.Approach to use boosting algorithm - Trees grows sequentially. Each sequence tree is grown on a modified version of original data.
+                                                 Prediction updated as trees grown. This can be applied by initializing prediction as zero. Then find the residuals.Fit the tree with d splits, treating residuals as response. 
+                                                 Then update the predictions and update residuals for new predictions and repeat number of times."),
+                                        withMathJax(),
+                                        
+                                        tags$div(
+                                        h3("Formula to update predictions of Boosted Decision Tree Model"),
+                                        span("y-hat(x) = y-hat (x)+ λy^b(x)"),br(),
+                                        span("λ")," is a shrinkage parameter,",br(),
+                                        span("y^b(x)")," Treating the residuals as the response (which they are for the first fit),",br(),
+                                        span("y-hat(x)")," predictions"
+                                        ),br(),
+                                        
+                                        fluidRow(tags$i("Advantages : ")),
+                                        tags$ul("Easy to tune"),
+                                        tags$ul("The features can be a mix of categorical and continuous data"),
+                                        tags$ul("Training on the residuals gives very good accuracy"),br(),
+                                        fluidRow(tags$i("Drawbacks :")),
+                                        tags$ul("Sensitive to overfitting"),
+                                        tags$ul("slow training of trees"),
+                                        tags$ul(),
+                                        tags$ul(),
+                                        ),br(),br(), 
+                               
+                               # Random Forest Model
+                               tags$div(fluidRow(strong("Random Forest Model")),
+                                        tags$div("A random forest is a supervised machine learning algorithm that is constructed from decision tree algorithms and also uses Ensemble Learning technique. It is used to solve regression and classification problems.
+                                                 The random forest algorithm establishes the outcome based on the predictions of the decision trees. 
+                                                 It predicts by taking the average or mean of the output from various trees. Increasing the number of trees, reduces overfitting of data and increases the accuracy of the outcome."),br(),
+                                        fluidRow(tags$i("Advantages : ")),
+                                        tags$ul("Random Forest works well with both categorical and continuous values"),
+                                        tags$ul("It reduces overfitting in decision trees and helps to improve the accuracy"),
+                                        tags$ul("It automates missing values present in the data"),
+                                        tags$ul("Normalising of data is not required as it uses a rule-based approach."),
+                                        tags$ul("It is flexible to both classification and regression problems"),br(),
+                                        fluidRow(tags$i("Drawbacks :")),
+                                        tags$ul("Random Forest Model requires much computational power as well as resources as it builds numerous trees to combine their outputs. "),
+                                        tags$ul("It also requires much time for training as it combines a lot of decision trees to determine the class."),
+                                        tags$ul("Due to the ensemble of decision trees, it also suffers interpretability and fails to determine the significance of each variable"),
+                                        )
                       ),
                       tabPanel("Model Fitting",
                                
