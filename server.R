@@ -14,6 +14,7 @@ library(tree)
 library(rattle)
 library(randomForest)
 library(plotly)
+library(gbm)
 
 
 waterPotabilityFullData<- as_data_frame(read.csv("./data/water_potability.csv"))
@@ -233,6 +234,8 @@ shinyServer(function(input, output, session) {
     
   trainModels <- eventReactive(input$mdlRunButton, {
     df <- waterPotabilityFullData %>% select(-water_type,-Hard_level)
+    
+    df$Potability <- factor(df$Potability)
     set.seed(123)
     
     #Create train and test datasets
@@ -240,6 +243,48 @@ shinyServer(function(input, output, session) {
     quality_train <- df[train,]
     quality_test <- df[-train,]
     
+    # Fit RF Model for Water Quality Prediction
+    trainRF <- train( quality_train %>% dplyr::select(!!!input$trainingPred),
+                           quality_train[,"Potability"],
+                           method="rf",
+                           trControl = trainControl(method="repeatedcv", number=2),
+                           preProcess= c("center","scale"),
+                           tuneGrid = data.frame(mtry = input$varmtry))
+    
+    # Fit Boosted Model for Water Quality Prediction
+    trainBST <- train()
+    
+    # Fit KNN for Water Quality Prediction
+    knnFit <- knn(train = select(quality_train, -Potability),
+                  test = select(quality_test, -Potability),
+                  cl = quality_train$Potability,
+                  k = 3) #could use CV to determine k
+    fitInfo <- tibble::as.tibble(data.frame(knnFit, select(quality_test, everything())))
+    
+    
+    #Test set Prediction
+    predn <- predict(trainRF, newdata = quality_test)
+    predRF <- postResample(pred = predn, obs = quality_test$Portabiliy)
+    
+    list(RFPred = predRF)
+    
   })
+  
+  output$RFsmry<- renderPrint({
+    rfm <- trainModels()["RFModel"]
+    list("Random Forest Statistics: Accuracy" = rfm$RFModel$results$Accuracy, "Model Summary"= rfm$RFModel, "Prediction Results" = trainModels()["RFPred"])
+  })
+  
+  output$TestSummary<- renderPrint({
+    bModel <- trainModels()
+    bModelText <- switch(bModel$bestModel,"Logistic regression","Classification Tree","Random Forest")
+    paste0("Best Performing Model is : ", bModelText)
+  })
+  
+  output$mtryInput <- renderUI({
+    if(as.numeric(length(input$trainingPred)) > 0)
+      numericInput("varmtry", "Tunning Parameter mtry for Radom Forest :", 1, min = 1, max = as.numeric(length(input$trainingPred)))
+  })
+  
   
 })
