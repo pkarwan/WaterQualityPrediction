@@ -199,9 +199,31 @@ shinyUI(
                                         tags$ul("Due to the ensemble of decision trees, it also suffers interpretability and fails to determine the significance of each variable"),
                                         )
                       ),
+                      
                       tabPanel("Model Fitting",
-                               
+                               fluidPage(
+                                 fluidRow(
+                                   p("It is recommended to only select training dataset between 60% to 90% to train the models."),
+                                   sliderInput("dataSlider", "Select Training Data (in percentage):", 60, 90, 70, step=5),
+                                   varSelectInput("trainingPred", "Select Columns", waterPotabilityFullData %>% select(-Potability,-water_type,-Hard_level), multiple = T),
+                                   uiOutput("mtryInput"),
+                                   actionButton("mdlRunButton", "Run Models", class = "btn-primary"),
+                                   verbatimTextOutput ("TestSummary")
+                                 ),
+                                 fluidRow(
+                                   column(4,
+                                          h3("KNN"),
+                                          verbatimTextOutput ("KNNsmry")),
+                                   column(4,
+                                          h3("Boosted Decision Tree"),
+                                          verbatimTextOutput ("BSTsmry")),
+                                   column(4,
+                                          h3("Random Forest"),
+                                          verbatimTextOutput ("RFsmry")),
+                                 )
                                ),
+                      ),
+                               
                       tabPanel("Prediction")
                     )
                   )
@@ -294,7 +316,6 @@ shinyUI(
         
         br(),
                 )
-        
 
     )
   )

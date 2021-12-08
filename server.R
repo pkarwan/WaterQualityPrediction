@@ -221,4 +221,25 @@ shinyServer(function(input, output, session) {
   
   
   # Model Page
+  ## Model Fitting
+  
+  output$runMdlOutput <- renderPrint({
+    userInp <- as.data.frame(t(userInput()))
+    colnames(userInp) <- input$colsForModel
+    
+    trainModels()
+  })
+    
+    
+  trainModels <- eventReactive(input$mdlRunButton, {
+    df <- waterPotabilityFullData %>% select(-water_type,-Hard_level)
+    set.seed(123)
+    
+    #Create train and test datasets
+    train <- sample(1:nrow(df), nrow(df)*(input$dataSlider/100))
+    quality_train <- df[train,]
+    quality_test <- df[-train,]
+    
+  })
+  
 })
