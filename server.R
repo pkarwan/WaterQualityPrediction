@@ -224,67 +224,144 @@ shinyServer(function(input, output, session) {
   # Model Page
   ## Model Fitting
   
+  userInput <- reactive({
+        # Assign values to corresponding variables
+        i <- 0
+        tmp_values <- c()
+        for (x in input$trainingPred) {
+            i <- i+1
+            tmp_values[i] <- eval(parse(text=paste0("input$select",x)))
+        }
+        tmp_values
+    })
+  
   output$runMdlOutput <- renderPrint({
     userInp <- as.data.frame(t(userInput()))
-    colnames(userInp) <- input$colsForModel
+    colnames(userInp) <- input$trainingPred
     
     trainModels()
   })
     
     
   trainModels <- eventReactive(input$mdlRunButton, {
-    df <- waterPotabilityFullData %>% select(-water_type,-Hard_level)
+    df <- as_data_frame(waterPotabilityFullData %>% select(-water_type,-Hard_level))
     
-    df$Potability <- factor(df$Potability)
+    df[,"Potability"] <- factor(df[,"Potability"])
+    #str(df)
+	
+	# set seed
     set.seed(123)
     
     #Create train and test datasets
     train <- sample(1:nrow(df), nrow(df)*(input$dataSlider/100))
+    #g <- input$dataSlider
     quality_train <- df[train,]
     quality_test <- df[-train,]
     
-    # Fit RF Model for Water Quality Prediction
+    #Fit RF Model for Water Quality Prediction
     trainRF <- train( quality_train %>% dplyr::select(!!!input$trainingPred),
                            quality_train[,"Potability"],
                            method="rf",
                            trControl = trainControl(method="repeatedcv", number=2),
                            preProcess= c("center","scale"),
+                           na.action=randomForest::na.roughfix,
+                           ntree=500,
                            tuneGrid = data.frame(mtry = input$varmtry))
     
+    # trainRF <- train( quality_train[,"Portability"]~.,
+    #                   data = quality_train,
+    #                   method="rf",
+    #                   trControl = trainControl(method="repeatedcv", number=2),
+    #                   preProcess= c("center","scale"),
+    #                   na.action=randomForest::na.roughfix,
+    #                   ntree=500,
+    #                   tuneGrid = data.frame(mtry = input$varmtry))
+    
+
     # Fit Boosted Model for Water Quality Prediction
-    trainBST <- train()
+    trainBST <- train( quality_train %>% dplyr::select(!!!input$trainingPred),
+                       quality_train[,"Potability"],
+                       method="rf",
+                       trControl = trainControl(method="repeatedcv", number=2),
+                       preProcess= c("center","scale"),
+                       tuneGrid = data.frame(mtry = input$varmtry))
     
     # Fit KNN for Water Quality Prediction
-    knnFit <- knn(train = select(quality_train, -Potability),
-                  test = select(quality_test, -Potability),
-                  cl = quality_train$Potability,
+    knnFit <- knn(train = quality_train %>% dplyr::select(!!!input$trainingPred),
+                  test = quality_test %>% dplyr::select(!!!input$trainingPred),
+                  cl = quality_train[,"Potability"],
                   k = 3) #could use CV to determine k
     fitInfo <- tibble::as.tibble(data.frame(knnFit, select(quality_test, everything())))
     
     
     #Test set Prediction
     predn <- predict(trainRF, newdata = quality_test)
-    predRF <- postResample(pred = predn, obs = quality_test$Portabiliy)
+    predRF <- postResample(pred = predn, obs = quality_test[,"Potability"])
+	
+	predn <- predict(knnFit, newdata = quality_test)
+    predKNN <- postResample(pred = predn, obs = quality_test[,"Potability"])
+	
+	predn <- predict(trainBST, newdata = quality_test)
+    predBST <- postResample(pred = predn, obs = quality_test[,"Potability"])
+	
+	trainedBestModel <- which.max(c(as.numeric(predKNN[1]), as.numeric(predBST[1]), as.numeric(predRF[1])))
     
-    list(RFPred = predRF)
+    print(trainedBestModel)
+    list(KNNModel = knnFit, BSTModel = trainBST, RFModel = trainRF,
+         predK = predKNN, predB = predBST, predR = predRF, bestModel = trainedBestModel)
     
   })
   
   output$RFsmry<- renderPrint({
-    rfm <- trainModels()["RFModel"]
-    list("Random Forest Statistics: Accuracy" = rfm$RFModel$results$Accuracy, "Model Summary"= rfm$RFModel, "Prediction Results" = trainModels()["RFPred"])
+    FITRF <- trainModels()["RFModel"]
+    list("Random Forest Statistics: Accuracy" = FITRF$RFModel$results$Accuracy, "Model Summary"= FITRF$RFModel, "Prediction Results" = trainModels()["predR"])
+  #print("in rf summary")
+    })
+  
+  output$KNNsmry<- renderPrint({
+        FitKNN <- trainModels()["KNNModel"]
+        list("Fit Statistics: Accuracy" = FitKNN$KNNModel$results$Accuracy, "Model Summary"= FitKNN$KNNModel , "Prediction Results" = trainModels()["predK"])
+        #print("in knn summary")
+   })
+    
+  output$BSTsmry<- renderPrint({
+        fitBST <- trainModels()["BSTModel"]
+        list("Fit Statistics: Accuracy" = fitBST$BSTModel$results$Accuracy[1], "Model Summary"= fitBST$BSTModel, "Prediction Results" = trainModels()["predB"])
+        #print("in BST summary")
   })
   
-  output$TestSummary<- renderPrint({
-    bModel <- trainModels()
-    bModelText <- switch(bModel$bestModel,"Logistic regression","Classification Tree","Random Forest")
-    paste0("Best Performing Model is : ", bModelText)
+  output$TestSmry<- renderPrint({
+    bestM <- trainModels()
+    predictedModel <- switch(bestM$bestModel,"KNN","Boosted Decision Tree","Random Forest")
+    paste0("The best Performing Model is : ", predictedModel)
+    #print("in test summary")
   })
   
   output$mtryInput <- renderUI({
     if(as.numeric(length(input$trainingPred)) > 0)
       numericInput("varmtry", "Tunning Parameter mtry for Radom Forest :", 1, min = 1, max = as.numeric(length(input$trainingPred)))
   })
+ #*********************************************************** 
+
+  # Prediction Tab
+  output$predTabOutput <- renderPrint({
+    df <- as.data.frame(t(userInput()))
+    colnames(df) <- input$trainingPred
+    
+    
+    if(input$selectMdlDd == "KNN") {
+      PredForUser <- predict((trainModels()["KNNModel"])$KNNModel, df)
+      PredForUser
+    } else if(input$selectMdlDd == "Boosted Decision Tree") {
+      PredForUser <- predict((trainModels()["BSTModel"])$BSTModel, df)
+      PredForUser
+    } else {
+      PredForUser <- predict((trainModels()["RFModel"])$RFModel, df)
+      PredForUser
+    }
+    
+    
+    
+  })
   
-  
-})
+  })

@@ -207,7 +207,7 @@ shinyUI(
                                    varSelectInput("trainingPred", "Select Columns", waterPotabilityFullData %>% select(-Potability,-water_type,-Hard_level), multiple = T),
                                    uiOutput("mtryInput"),
                                    actionButton("mdlRunButton", "Train Models", class = "btn-primary"),
-                                   verbatimTextOutput ("TestSummary")
+                                   verbatimTextOutput ("TestSmry")
                                  ),
                                  fluidRow(
                                    column(4,
@@ -219,11 +219,69 @@ shinyUI(
                                    column(4,
                                           h3("Random Forest"),
                                           verbatimTextOutput ("RFsmry")),
-                                 )
+                                    )
                                ),
                       ),
                                
-                      tabPanel("Prediction")
+                      tabPanel("Prediction",
+                               sidebarLayout(
+                                 sidebarPanel(
+                                   conditionalPanel(condition="input.trainingPred.includes('ph')",
+                                                    sliderInput("phSlider", "ph:", 
+                                                                min = 0, max = 14, 
+                                                                value = 6, step = 0.1)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Hardness')",
+                                                    sliderInput("HardnessSlider", "Hardness:", 
+                                                                min = 73, max = 318, 
+                                                                value = 212, step = 0.1)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Solids')",
+                                                    sliderInput("SolidsSlider", "Solids:", 
+                                                                min = 321, max = 56488, 
+                                                                value = 20000, step = 5000)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Chloramines')",
+                                                    sliderInput("ChloraminesSlider", "Chloramines:", 
+                                                                min = 1.4, max = 13, 
+                                                                value = 4, step = 0.5)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Sulfate')",
+                                                    sliderInput("SulfateSlider", "Sulfate:", 
+                                                                min = 129, max = 481, 
+                                                                value = 30, step = 320)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Conductivity')",
+                                                    sliderInput("ConductivitySlider", "Conductivity:", 
+                                                                min = 202, max = 753, 
+                                                                value = 400, step = 50)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Organic_carbon')",
+                                                    sliderInput("Organic_carbonSlider", "Organic_carbon:", 
+                                                                min = 2.2, max = 27, 
+                                                                value = 18, step = 5)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Trihalomethanes')",
+                                                    sliderInput("TrihalomethanesSlider", "Trihalomethanes:", 
+                                                                min = 8.5, max = 124, 
+                                                                value = 70, step = 40)
+                                   ),
+                                   conditionalPanel(condition="input.trainingPred.includes('Turbidity')",
+                                                    sliderInput("TurbiditySlider", "Turbidity:", 
+                                                                min = 1.4, max = 6.4, 
+                                                                value = 2, step = 1)
+                                   ),
+                
+                                 ),
+                                 
+                                 mainPanel(
+                                   tags$div(selectInput("selectMdlDd", "Select Model to Predict if water is safe to human consumption", 
+                                                        selected = 1,
+                                                        choices = c("KNN","Boosted Decision Tree","Random Forest"))),
+                                   verbatimTextOutput("predTabOutput")
+                                 )
+                               )
+                               )
                     )
                   )
                 )
